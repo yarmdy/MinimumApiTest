@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 
 public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
 {
@@ -19,7 +20,16 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             var stop = context.RequestServices.GetRequiredService<Stopwatch>();
             stop.Start();
             var obj = context.RequestServices.GetRequiredService<T>();
-            var methodInfo = obj.MapMethodInfo(pattern, context.GetRouteData());
+            MethodInfo? methodInfo = null;
+            Delegate? methodDelegate = null;
+            if(obj is IClassDelegateRequestHandler objDelegate)
+            {
+                methodDelegate = objDelegate.MapDelegate(pattern, context.GetRouteData());
+            }
+            else
+            {
+                methodInfo = obj.MapMethodInfo(pattern, context.GetRouteData());
+            }
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
             await handler(context);
             Console.WriteLine($"{context.Request.Method} Request:{context.Request.Path} {stop.ElapsedMilliseconds}ms");
@@ -32,11 +42,16 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
                     ThrowOnBadRequest = _options?.Value.ThrowOnBadRequest ?? false,
                     DisableInferBodyFromParameters = false,
                 };
-                if (methodInfo == null)
+                if (methodDelegate != null)
                 {
-                    return RequestDelegateFactory.Create(() => Results.NotFound("未找到"), options).RequestDelegate;
+                    return RequestDelegateFactory.Create(methodDelegate!, options).RequestDelegate;
                 }
-                return RequestDelegateFactory.Create(methodInfo!,context=> obj, options).RequestDelegate;
+                if (methodInfo != null)
+                {
+                    return RequestDelegateFactory.Create(methodInfo!, context => obj, options).RequestDelegate;
+                }
+                return RequestDelegateFactory.Create(() => Results.NotFound("未找到"), options).RequestDelegate;
+                
             }
         };
     }

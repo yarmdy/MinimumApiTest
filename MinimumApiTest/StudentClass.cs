@@ -1,18 +1,24 @@
 ﻿using Microsoft.AspNetCore.Routing.Patterns;
 using System.Reflection;
 
-public class StudentClass : IClassRequestHandler
+public class StudentClass : ClassRequestHandler,IClassDelegateRequestHandler
 {
-    public MethodInfo? MapMethodInfo(RoutePattern pattern, RouteData route)
-    {
-        var action = route.Values["action"];
-        return action switch
-        {
-            "List" => GetType().GetMethod("List"),
-            _ => null
-        };
-    }
     public IResult List() {
         return Results.Content("学生列表");
+    }
+    public IResult Get(int id)
+    {
+        return Results.Content($"学生：{id}");
+    }
+
+    public Delegate? MapDelegate(RoutePattern pattern, RouteData route)
+    {
+        var action = (route.Values["action"]+"").ToLower();
+        return action switch
+        {
+            "list" => List,
+            "get"=>Get,
+            _ => null
+        };
     }
 }
