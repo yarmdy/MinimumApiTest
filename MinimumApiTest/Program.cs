@@ -17,6 +17,6 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
 }
 app.MapGet("help",()=>Results.Content("°ïÖú"));
-app.MapClass<HomeClass>("home/{action=Index}");
+app.MapClass<HomeClass>("{class=home}/{action=Index}/{id:int?}");
 app.MapClass<StudentClass>("student/{action=List}/{id?}");
 app.Run();

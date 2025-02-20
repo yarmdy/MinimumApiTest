@@ -22,11 +22,11 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             Delegate? methodDelegate = null;
             if(obj is IClassDelegateRequestHandler objDelegate)
             {
-                methodDelegate = objDelegate.MapDelegate(pattern, context.GetRouteData());
+                methodDelegate = objDelegate.MapDelegate(context, pattern, context.GetRouteData());
             }
             else
             {
-                methodInfo = obj.MapMethodInfo(pattern, context.GetRouteData());
+                methodInfo = obj.MapMethodInfo(context, pattern, context.GetRouteData());
             }
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
             await handler(context);

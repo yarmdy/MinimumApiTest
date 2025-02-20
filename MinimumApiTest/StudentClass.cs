@@ -11,7 +11,7 @@ public class StudentClass : ClassRequestHandler,IClassDelegateRequestHandler
         return Results.Content($"学生：{id}");
     }
 
-    public Delegate? MapDelegate(RoutePattern pattern, RouteData route)
+    public Delegate? MapDelegate(HttpContext context, RoutePattern pattern, RouteData route)
     {
         var action = (route.Values["action"]+"").ToLower();
         return action switch

@@ -3,9 +3,9 @@ using System.Reflection;
 
 public interface IClassRequestHandler
 {
-    MethodInfo? MapMethodInfo(RoutePattern pattern, RouteData route);
+    MethodInfo? MapMethodInfo(HttpContext context, RoutePattern pattern, RouteData route);
 }
 public interface IClassDelegateRequestHandler
 {
-    Delegate? MapDelegate(RoutePattern pattern, RouteData route);
+    Delegate? MapDelegate(HttpContext context, RoutePattern pattern, RouteData route);
 }
