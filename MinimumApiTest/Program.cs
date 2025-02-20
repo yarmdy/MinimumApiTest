@@ -18,5 +18,5 @@ if (!app.Environment.IsDevelopment())
 }
 app.MapGet("help",()=>Results.Content("°ïÖú"));
 app.MapClass<HomeClass>("home/{action}");
-app.MapClass<StudentClass>("student/{action}");
+app.MapClass<StudentClass>("student/{action}/{id?}");
 app.Run();
