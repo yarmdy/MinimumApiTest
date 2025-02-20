@@ -28,6 +28,8 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             {
                 methodInfo = obj.MapMethodInfo(context, pattern, context.GetRouteData());
             }
+            var itemName = $"RequestDelegateObject_{obj.GetType().FullName}_context.Request.Path";
+            context.Items[itemName] = obj;
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
             await handler(context);
             RequestDelegate createRequestDelegate(string path)
@@ -45,7 +47,7 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
                 }
                 if (methodInfo != null)
                 {
-                    return RequestDelegateFactory.Create(methodInfo!, context => obj, options).RequestDelegate;
+                    return RequestDelegateFactory.Create(methodInfo!, context => context.Items[itemName]!, options).RequestDelegate;
                 }
                 return RequestDelegateFactory.Create(() => Results.NotFound("未找到"), options).RequestDelegate;
                 
