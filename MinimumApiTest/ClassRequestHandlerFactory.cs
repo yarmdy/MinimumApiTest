@@ -17,8 +17,6 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
     public RequestDelegate CreateHandler<T>(RoutePattern pattern) where T : IClassRequestHandler
     {
         return async context => {
-            var stop = context.RequestServices.GetRequiredService<Stopwatch>();
-            stop.Start();
             var obj = context.RequestServices.GetRequiredService<T>();
             MethodInfo? methodInfo = null;
             Delegate? methodDelegate = null;
@@ -32,7 +30,6 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             }
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
             await handler(context);
-            Console.WriteLine($"{context.Request.Method} Request:{context.Request.Path} {stop.ElapsedMilliseconds}ms");
             RequestDelegate createRequestDelegate(string path)
             {
                 var options = new RequestDelegateFactoryOptions
