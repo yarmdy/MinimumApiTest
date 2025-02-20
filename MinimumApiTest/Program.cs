@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IClassRequestHandlerFactory, ClassRequestHandlerFactory>();
 builder.Services.AddTransient<HomeClass>();
 builder.Services.AddTransient<StudentClass>();
+builder.Services.AddTransient<Other>();
 builder.Services.AddScoped<Stopwatch>();
 
 // Add services to the container.
@@ -19,4 +20,5 @@ if (!app.Environment.IsDevelopment())
 app.MapGet("help",(HttpRequest req)=>Results.Content($"°ïÖú{req.Path}"));
 app.MapClass<HomeClass>("{class=home}/{action=Index}/{id:int?}");
 app.MapClass<StudentClass>("student/{action=List}/{id?}");
+app.MapClass<Other>("Other/{**afterUrl}");
 app.Run();
