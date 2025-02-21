@@ -1,4 +1,6 @@
-﻿public class HomeClass : ClassRequestHandler
+﻿using System.ComponentModel.DataAnnotations;
+
+public class HomeClass : ClassRequestHandler
 {
     AsyncLocal<DateTime> _date;
     public HomeClass() 
@@ -11,7 +13,7 @@
         return await Task.FromResult(Results.Content($"首页{_date.Value}"));
     }
 
-    public IResult About(string content)
+    public IResult About([StringLength(10,ErrorMessage = "不能超10位")] string content)
     {
         return Results.Content(content);
     }

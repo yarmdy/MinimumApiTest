@@ -41,16 +41,21 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
                     ThrowOnBadRequest = _options?.Value.ThrowOnBadRequest ?? false,
                     DisableInferBodyFromParameters = false,
                 };
+                RequestDelegateResult result;
                 if (methodDelegate != null)
                 {
-                    return RequestDelegateFactory.Create(methodDelegate!, options).RequestDelegate;
-                }
+                    result= RequestDelegateFactory.Create(methodDelegate!.Method, context => context.Items[itemName]!, options);
+                }else
                 if (methodInfo != null)
                 {
-                    return RequestDelegateFactory.Create(methodInfo!, context => context.Items[itemName]!, options).RequestDelegate;
+                    result= RequestDelegateFactory.Create(methodInfo!, context => context.Items[itemName]!, options);
                 }
-                return RequestDelegateFactory.Create(() => Results.NotFound("未找到"), options).RequestDelegate;
+                else
+                {
+                    result = RequestDelegateFactory.Create(() => Results.NotFound("未找到"), options);
+                }
                 
+                return result.RequestDelegate;   
             }
         };
     }
