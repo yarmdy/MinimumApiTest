@@ -17,30 +17,6 @@ public abstract class ClassRequestHandler : IClassRequestHandler
         {
             return null;
         }
-        return methods.GetOrAdd(action + "", action => {
-            var method = GetType().GetMethod(action, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (method == null)
-            {
-                return null;
-            }
-            var rt = method.ReturnType;
-            if (rt.IsAssignableFrom(typeof(IResult)))
-            {
-                return method;
-            }
-            if (!rt.IsAssignableTo(typeof(Task)))
-            {
-                return null;
-            }
-            if (!rt.IsConstructedGenericType || rt.GenericTypeArguments.Length != 1)
-            {
-                return null;
-            }
-            if (!rt.GenericTypeArguments[0].IsAssignableFrom(typeof(IResult)))
-            {
-                return null;
-            }
-            return method;
-        });
+        return methods.GetOrAdd(action + "", action => GetType().GetMethod(action, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase));
    }
 }

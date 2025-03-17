@@ -16,18 +16,20 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
     ConcurrentDictionary<string,RequestDelegate> requestDelegates = new ConcurrentDictionary<string,RequestDelegate>(StringComparer.InvariantCultureIgnoreCase);
     public RequestDelegate CreateHandler<T>(RoutePattern pattern) where T : IClassRequestHandler
     {
+        var objMap = _provider.GetRequiredService<T>();
         return async context => {
-            var obj = context.RequestServices.GetRequiredService<T>();
+            
             MethodInfo? methodInfo = null;
             Delegate? methodDelegate = null;
-            if(obj is IClassDelegateRequestHandler objDelegate)
+            if(objMap is IClassDelegateRequestHandler objDelegate)
             {
                 methodDelegate = objDelegate.MapDelegate(context, pattern, context.GetRouteData());
             }
             else
             {
-                methodInfo = obj.MapMethodInfo(context, pattern, context.GetRouteData());
+                methodInfo = objMap.MapMethodInfo(context, pattern, context.GetRouteData());
             }
+            var obj = context.RequestServices.GetRequiredService<T>();
             var itemName = $"RequestDelegateObject_{obj.GetType().FullName}_context.Request.Path";
             context.Items[itemName] = obj;
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
