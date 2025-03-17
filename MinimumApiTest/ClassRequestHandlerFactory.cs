@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Routing.Patterns;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -36,13 +37,20 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             await handler(context);
             RequestDelegate createRequestDelegate(string path)
             {
+                var builder = new RouteEndpointBuilder(null, pattern, 0);
+                if(objMap is IEndpointFilter endpointFilter)
+                {
+                    builder.FilterFactories.Add((context, next) => async context => await endpointFilter.InvokeAsync(context, next));
+                }
                 var options = new RequestDelegateFactoryOptions
                 {
                     ServiceProvider = _provider,
                     RouteParameterNames = pattern.Parameters.Select(a => a.Name),
                     ThrowOnBadRequest = _options?.Value.ThrowOnBadRequest ?? false,
                     DisableInferBodyFromParameters = false,
+                    EndpointBuilder = builder
                 };
+                
                 RequestDelegateResult result;
                 if (methodDelegate != null)
                 {
