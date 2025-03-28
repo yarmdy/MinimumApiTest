@@ -17,20 +17,18 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
     ConcurrentDictionary<string,RequestDelegate> requestDelegates = new ConcurrentDictionary<string,RequestDelegate>(StringComparer.InvariantCultureIgnoreCase);
     public RequestDelegate CreateHandler<T>(RoutePattern pattern) where T : IClassRequestHandler
     {
-        var objMap = _provider.GetRequiredService<T>();
         return async context => {
-            
+            var obj = context.RequestServices.GetRequiredService<T>();
             MethodInfo? methodInfo = null;
             Delegate? methodDelegate = null;
-            if(objMap is IClassDelegateRequestHandler objDelegate)
+            if(obj is IClassDelegateRequestHandler objDelegate)
             {
                 methodDelegate = objDelegate.MapDelegate(context, pattern, context.GetRouteData());
             }
             else
             {
-                methodInfo = objMap.MapMethodInfo(context, pattern, context.GetRouteData());
+                methodInfo = obj.MapMethodInfo(context, pattern, context.GetRouteData());
             }
-            var obj = context.RequestServices.GetRequiredService<T>();
             var itemName = $"RequestDelegateObject_{obj.GetType().FullName}_context.Request.Path";
             context.Items[itemName] = obj;
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
@@ -38,7 +36,7 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             RequestDelegate createRequestDelegate(string path)
             {
                 var builder = new RouteEndpointBuilder(null, pattern, 0);
-                if(objMap is IEndpointFilter endpointFilter)
+                if(obj is IEndpointFilter endpointFilter)
                 {
                     builder.FilterFactories.Add((context, next) => async context => await endpointFilter.InvokeAsync(context, next));
                 }
