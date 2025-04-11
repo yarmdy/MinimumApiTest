@@ -17,8 +17,19 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
     ConcurrentDictionary<string,RequestDelegate> requestDelegates = new ConcurrentDictionary<string,RequestDelegate>(StringComparer.InvariantCultureIgnoreCase);
     public RequestDelegate CreateHandler<T>(RoutePattern pattern) where T : IClassRequestHandler
     {
+        T? obj = default;
         return async context => {
-            var obj = context.RequestServices.GetRequiredService<T>();
+            if (obj == null)
+            {
+                lock (this)
+                {
+                    if (obj == null)
+                    {
+                        obj = context.RequestServices.GetRequiredService<T>();
+                    }
+                }
+            }
+            
             MethodInfo? methodInfo = null;
             Delegate? methodDelegate = null;
             if(obj is IClassDelegateRequestHandler objDelegate)
@@ -29,16 +40,17 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             {
                 methodInfo = obj.MapMethodInfo(context, pattern, context.GetRouteData());
             }
-            var itemName = $"RequestDelegateObject_{obj.GetType().FullName}_context.Request.Path";
-            context.Items[itemName] = obj;
+            T obj2 = context.RequestServices.GetRequiredService<T>();
+            var itemName = $"RequestDelegateObject_{obj2.GetType().FullName}_{context.Request.Path}";
+            context.Items[itemName] = obj2;
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
             await handler(context);
             RequestDelegate createRequestDelegate(string path)
             {
                 var builder = new RouteEndpointBuilder(null, pattern, 0);
-                if(obj is IEndpointFilter endpointFilter)
+                if(obj is IEndpointFilter)
                 {
-                    builder.FilterFactories.Add((context, next) => async context => await endpointFilter.InvokeAsync(context, next));
+                    builder.FilterFactories.Add((context, next) => async context => await (context.HttpContext.Items[itemName] as IEndpointFilter)!.InvokeAsync(context, next));
                 }
                 var options = new RequestDelegateFactoryOptions
                 {
