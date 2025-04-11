@@ -5,7 +5,7 @@ using System.Reflection;
 
 public abstract class ClassRequestHandler : IClassRequestHandler
 {
-    private ConcurrentDictionary<string,MethodInfo?> methods = new ConcurrentDictionary<string,MethodInfo?>();
+    private static ConcurrentDictionary<string,MethodInfo?> methods = new ConcurrentDictionary<string,MethodInfo?>();
     private static readonly HashSet<string> noMapMethodNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase) {
         nameof(IClassDelegateRequestHandler.MapDelegate),
         nameof(IClassRequestHandler.MapMethodInfo),
@@ -26,8 +26,8 @@ public abstract class ClassRequestHandler : IClassRequestHandler
         {
             return null;
         }
-        return methods.GetOrAdd(action + "", action => {
-            var method =  GetType().GetMethod(action, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+        return methods.GetOrAdd(context.Request.Path, path => {
+            var method =  GetType().GetMethod(action+"", BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
             if (method == null)
             {
                 return null;

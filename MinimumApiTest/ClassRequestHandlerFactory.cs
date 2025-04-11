@@ -14,22 +14,11 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
         _options = options;
         _provider = serviceProvider;
     }
-    ConcurrentDictionary<string,RequestDelegate> requestDelegates = new ConcurrentDictionary<string,RequestDelegate>(StringComparer.InvariantCultureIgnoreCase);
+    ConcurrentDictionary<string,RequestDelegate> requestDelegates = new ConcurrentDictionary<string,RequestDelegate>(StringComparer.CurrentCultureIgnoreCase);
     public RequestDelegate CreateHandler<T>(RoutePattern pattern) where T : IClassRequestHandler
     {
-        T? obj = default;
         return async context => {
-            if (obj == null)
-            {
-                lock (this)
-                {
-                    if (obj == null)
-                    {
-                        obj = context.RequestServices.GetRequiredService<T>();
-                    }
-                }
-            }
-            
+            T obj = context.RequestServices.GetRequiredService<T>();
             MethodInfo? methodInfo = null;
             Delegate? methodDelegate = null;
             if(obj is IClassDelegateRequestHandler objDelegate)
@@ -40,9 +29,8 @@ public class ClassRequestHandlerFactory : IClassRequestHandlerFactory
             {
                 methodInfo = obj.MapMethodInfo(context, pattern, context.GetRouteData());
             }
-            T obj2 = context.RequestServices.GetRequiredService<T>();
-            var itemName = $"RequestDelegateObject_{obj2.GetType().FullName}_{context.Request.Path}";
-            context.Items[itemName] = obj2;
+            var itemName = $"RequestDelegateObject_{obj.GetType().FullName}_{context.Request.Path}";
+            context.Items[itemName] = obj;
             var handler = requestDelegates.GetOrAdd(context.Request.Path.ToString(), createRequestDelegate);
             await handler(context);
             RequestDelegate createRequestDelegate(string path)
